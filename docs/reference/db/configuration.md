@@ -61,7 +61,7 @@ A **required** object with the following settings:
     "schema": [
       "schema1", "schema2"
     ],
-    ... 
+    ...
 
   },
 
@@ -354,6 +354,8 @@ A **required** object with the following settings:
 
 ### `authorization`
 
+<!-- TODO: Rewrite -->
+
 Authorization settings can be set with an optional `authorization` object, for example:
 
 ```json
@@ -369,122 +371,6 @@ Authorization settings can be set with an optional `authorization` object, for e
 - **`rules`** (`array`) — Authorization rules that describe the CRUD actions that users are allowed to perform.
 
 Note that if an `authorization` section is present, but _**no rules**_ are specified, no CRUD operations are allowed (unless `adminSecret` is passed).
-
-#### Authorization rules
-
-Every rule must specify:
-- `role` — the role name. It's a string and must match with the role(s) set by the external authentication service
-- `entity` — the Platformatic DB entity
-- A set of optional [`defaults`](#defaults)
-- One entry for each supported CRUD operation: `find`, `save`, `delete`
-
-#### Operation options
-
-Every operation can specify `checks` used for the authorizations.
-This value can be `false` (operation disabled) or `true` (operation enabled with no checks).
-
-To specify more fine-grained authorization controls, add a `checks` field, e.g.:
-
-```json
-{
-  "role": "user",
-  "entity": "page",
-  "find": {
-    "checks": {
-      "userId": "X-PLATFORMATIC-USER-ID"
-    }
-  },
-  ...
-}
-
-```
-
-In this example, when a user with a `user` role executes a `findPage`, they can
-access all the data that has `userId` equal to the value  in user metadata with
-key `X-PLATFORMATIC-USER-ID`.
-
-Note that `"userId": "X-PLATFORMATIC-USER-ID"` is syntactic sugar for:
-
-```json
-      "find": {
-        "checks": {
-          "userId": {
-            "eq": "X-PLATFORMATIC-USER-ID"
-          }
-        }
-      }
-```
-
-It's possible to specify more complex rules using all the [supported where clause operators](/reference/sql-mapper/entities/api.md#where-clause).
-
-Note that `userId` MUST exist as a field in the database table to use this feature.
-
-#### Fields
-
-If a `fields` array is present on an operation, Platformatic DB restricts the columns on which the user can execute to that list.
-For `save` operations, the configuration must specify all the not-nullable fields (otherwise, it would fail at runtime).
-Platformatic does these checks at startup.
-
-Example:
-
-```json
-    "rule": {
-        "entity": "page",
-        "role": "user",
-        "find": {
-          "checks": {
-            "userId": "X-PLATFORMATIC-USER-ID"
-          },
-          "fields": ["id", "title"]
-        }
-        ...
-    }
-```
-
-In this case, only `id` and `title` are returned for a user with a `user` role on the `page` entity.
-
-#### Defaults
-
-Defaults are used in database insert and are default fields added automatically populated from user metadata, e.g.:
-
-```json
-        "defaults": {
-          "userId": "X-PLATFORMATIC-USER-ID"
-        },
-```
-
-When an entity is created, the `userId` column is used and populated using the value from user metadata.
-
-#### Anonymous role
-
-If a user has no role, the `anonymous` role is assigned automatically. It's possible to specify a rule for it:
-
-```json
-    {
-      "role": "anonymous",
-      "entity": "page",
-      "find": false,
-      "delete": false,
-      "save": false
-    }
-```
-
-In this case, the user that has no role (or has an explicitly `anonymous` role) has no operations allowed on the `page` entity.
-
-#### Role and anonymous keys
-
-The roles key in user metadata defaults to `X-PLATFORMATIC-ROLE`. It's possible to change it using the `roleKey` field in configuration.
-Same for the `anonymous` role, which value can be changed using `anonymousRole`.
-
-```json
- "authorization": {
-    "roleKey": "X-MYCUSTOM-ROLE_KEY",
-    "anonymousRole": "anonym",
-    "rules": [
-    ...
-    ]
-  }
-```
 
 ## Environment variable placeholders
 
